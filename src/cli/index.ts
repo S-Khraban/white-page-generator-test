@@ -4,6 +4,12 @@ import { createRandom } from "../random/random.js";
 import { generateSite } from "../core/generateSite.js";
 import { writePages } from "../output/writeFiles.js";
 
+const parsePages = (value: string): string[] =>
+  value
+    .split(",")
+    .map((p) => p.trim())
+    .filter(Boolean);
+
 const program = new Command();
 
 program
@@ -12,43 +18,61 @@ program
   .option("--lang <lang>", "Language code", "es")
   .option("--geo <geo>", "GEO code", "ES")
   .option("--topic <topic>", "Topic name", "education")
-  .option(
-    "--pages <pages>",
-    "Comma-separated list of pages",
-    "home,about,contact"
-  )
+  .option("--pages <pages>", "Comma-separated list of pages", parsePages, [
+    "home",
+    "about",
+    "contact",
+  ])
   .option("--seed <seed>", "Seed for deterministic generation")
   .option("--out <out>", "Output directory", "generated")
-  .parse(process.argv);
+  .addHelpText(
+    "after",
+    `
+Examples:
+  white-page-generator --lang es --geo ES --topic education
+  white-page-generator --lang en --geo ES --pages home,about --out dist
+  white-page-generator --seed 123 --out generated
+`
+  );
 
-const options = program.opts();
+program.parse(process.argv);
 
-const rawInput = {
-  lang: options.lang,
-  geo: options.geo,
-  topic: options.topic,
-  pages: String(options.pages)
-    .split(",")
-    .map((p: string) => p.trim())
-    .filter(Boolean),
-  seed: options.seed ?? null,
+const options = program.opts<{
+  lang: string;
+  geo: string;
+  topic: string;
+  pages: string[];
+  seed?: string;
+  out: string;
+}>();
+
+const main = async () => {
+  const input = normalizeInput({
+    lang: options.lang.toLowerCase(),
+    geo: options.geo.toUpperCase(),
+    topic: options.topic,
+    pages: options.pages,
+    seed: options.seed ?? null,
+  });
+
+  const rnd = createRandom(input.seed);
+  const pages = generateSite(input, rnd);
+
+  await writePages(options.out, pages);
+
+  console.log(
+    JSON.stringify(
+      {
+        out: options.out,
+        pages: Object.keys(pages),
+        seed: input.seed,
+        lang: input.lang,
+        geo: input.geo,
+      },
+      null,
+      2
+    )
+  );
 };
 
-const input = normalizeInput(rawInput);
-const rnd = createRandom(input.seed);
-
-const pages = generateSite(input, rnd);
-
-await writePages(options.out, pages);
-
-console.log(
-  JSON.stringify(
-    {
-      out: options.out,
-      pages: Object.keys(pages),
-      seed: input.seed,
-    },
-    null,
-    2
-  )
-);
+await main();

@@ -1,13 +1,22 @@
-
 import type { Random } from "../random/random.js";
-import { es } from "../dictionaries/lang/es.js";
+import type { GeneratorInput } from "./input.js";
+import { getLangDict } from "../dictionaries/lang/index.js";
+import { getTopicDict } from "../dictionaries/topics/index.js";
 import { renderHomeTemplate } from "../templates/home.js";
 
-export function generateHome(rnd: Random): string {
+export function generateHome(input: GeneratorInput, rnd: Random): string {
+  const lang = getLangDict(input.lang);
+  const topic = getTopicDict(input.topic);
+
+  const siteName =
+    lang.common.siteName || topic.defaultSiteName || "Site";
+
   return renderHomeTemplate({
-    title: es.common.siteName,
-    headline: rnd.pick(es.home.headlines),
-    paragraph: rnd.pick(es.home.paragraphs),
-    footer: es.common.footerNote,
+    lang: input.lang,
+    title: siteName,
+    pageTitle: lang.common.pages.home.title,
+    headline: rnd.pick(topic.home.headlines),
+    paragraph: rnd.pick(topic.home.paragraphs),
+    footer: lang.common.footerNote,
   });
 }

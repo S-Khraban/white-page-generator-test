@@ -1,14 +1,26 @@
-import { Random } from "../random/random.js";
-import { es } from "../dictionaries/lang/es.js";
-import { ES } from "../dictionaries/geo/ES.js";
+import type { Random } from "../random/random.js";
+import type { GeneratorInput } from "./input.js";
+import { getLangDict } from "../dictionaries/lang/index.js";
+import { getGeoDict } from "../dictionaries/geo/index.js";
+import { getTopicDict } from "../dictionaries/topics/index.js";
 import { renderContactTemplate } from "../templates/contact.js";
 
-export function generateContact(rnd: Random): string {
+export function generateContact(input: GeneratorInput, rnd: Random): string {
+  const lang = getLangDict(input.lang);
+  const geo = getGeoDict(input.geo);
+  const topic = getTopicDict(input.topic);
+
+  const siteName =
+    lang.common.siteName || topic.defaultSiteName || "Site";
+
   return renderContactTemplate({
-    title: es.common.siteName,
+    lang: input.lang,
+    title: siteName,
+    pageTitle: lang.common.pages.contact.title,
     headline: rnd.pick(["Contacto", "Escríbenos", "Ayuda y consultas", "Soporte"]),
-    paragraph: rnd.pick(es.contact.paragraphs),
-    email: ES.contact.email,
-    footer: es.common.footerNote,
+    paragraph: rnd.pick(topic.contact.paragraphs),
+    country: geo.contact.country,
+    email: geo.contact.email,
+    footer: lang.common.footerNote,
   });
 }

@@ -11,7 +11,7 @@ export function generateSite(input: GeneratorInput, rnd: Random) {
   for (const page of input.pages) {
     if (page === "home") result["index.html"] = generateHome(rnd);
     if (page === "about") result["about.html"] = generateAbout(rnd);
-    if (page === "contact") result["contact.html"] = generateContact(rnd);
+    if (page === "contact") result["contact.html"] = generateContact(input, rnd);
   }
 
   return result;
