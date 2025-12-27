@@ -1,6 +1,8 @@
 import { Command } from "commander";
 import { normalizeInput } from "../core/input.js";
 import { createRandom } from "../random/random.js";
+import { generateSite } from "../core/generateSite.js";
+import { writePages } from "../output/writeFiles.js";
 
 const program = new Command();
 
@@ -16,6 +18,7 @@ program
     "home,about,contact"
   )
   .option("--seed <seed>", "Seed for deterministic generation")
+  .option("--out <out>", "Output directory", "generated")
   .parse(process.argv);
 
 const options = program.opts();
@@ -32,17 +35,20 @@ const rawInput = {
 };
 
 const input = normalizeInput(rawInput);
-
 const rnd = createRandom(input.seed);
 
-const randomDemo = {
-  headlineVariant: rnd.pick(["A", "B", "C", "D"]),
-  paragraphVariant: rnd.pick(["one", "two", "three", "four"]),
-  randomNumber: rnd.int(1, 100),
-};
+const pages = generateSite(input, rnd);
 
-console.log("White-page Generator | Normalized Input:");
-console.log(JSON.stringify(input, null, 2));
+await writePages(options.out, pages);
 
-console.log("White-page Generator | Random Demo:");
-console.log(JSON.stringify(randomDemo, null, 2));
+console.log(
+  JSON.stringify(
+    {
+      out: options.out,
+      pages: Object.keys(pages),
+      seed: input.seed,
+    },
+    null,
+    2
+  )
+);
